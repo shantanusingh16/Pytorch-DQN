@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from torch import nn
-from tqdm import tqdm
+from tqdm import tqdm_notebook as tqdm
 import itertools
 from utils.helpers import device, copy_model_params, process_state
 from policy import make_epsilon_greedy_policy
@@ -10,8 +10,12 @@ from replay import ReplayBuffer
 import gym
 from gym.wrappers import Monitor
 
+from IPython import display
+import matplotlib.pyplot as plt
+
 # we should learn this ourselves.
 VALID_ACTIONS = [0, 1, 2, 3]
+
 
 def train(env, estimator, target_network, num_episodes=1000,
                     replay_memory_size=500000,
@@ -56,6 +60,9 @@ def train(env, estimator, target_network, num_episodes=1000,
     total_t = 0
     pbar = tqdm(range(num_episodes))
     pbar.set_description("ep: %d, er: %.2f, et: %d, tt: %d, exp_size: %d" % (0, 0.0, 0, 0, 0))
+
+    recent_rewards = []
+    last_ep_reward = (0, 0)
 
     for ep in pbar:
 
@@ -123,6 +130,17 @@ def train(env, estimator, target_network, num_episodes=1000,
 
             total_t += 1
             episode_t = t
+
+        if ep % 100 == 0:
+            x = [last_ep_reward[0], ep]
+            y = [last_ep_reward[1], sum(recent_rewards)/100]
+            plt.plot(x, y, 'r')
+            display.clear_output(wait=True)
+            display.display(plt.gcf())
+            recent_rewards = []
+            last_ep_reward = (x[1], y[1])
+        else:
+            recent_rewards.append(episode_reward)
 
         pbar.set_description("ep: %d, el: %.5f, er: %.2f, et: %d, tt: %d, exp_size: %d" % (ep, episode_loss, episode_reward, episode_t, total_t, replay_memory.num_in_buffer))
         if total_t % update_every == 0:
