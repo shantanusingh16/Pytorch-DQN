@@ -107,7 +107,7 @@ def train(env, estimator, target_network, num_episodes=1000,
 
                 _, best_actions = torch.max(estimator(next_obs_batch), 1)
 
-                next_state_values = not_done_mask * torch.gather(target_network(next_obs_batch), 1, best_actions)
+                next_state_values = not_done_mask * torch.gather(target_network(next_obs_batch), 1, best_actions.unsqueeze(1))
 
                 expected_q_value = (next_state_values * discount) + rew_batch
 
