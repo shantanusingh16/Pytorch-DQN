@@ -96,8 +96,8 @@ def train(env, estimator, target_network, num_episodes=1000,
             if replay_memory.can_sample(batch_size):
                 obs_batch, act_batch, rew_batch, next_obs_batch, done_mask = replay_memory.sample(batch_size)
                 obs_batch = torch.from_numpy(obs_batch).float()
-                obs_batch = obs_batch.to(device)
-                act_batch = torch.from_numpy(act_batch).long().to(device) / 255.0
+                obs_batch = obs_batch.to(device) / 255.0
+                act_batch = torch.from_numpy(act_batch).long().to(device)
                 rew_batch = torch.from_numpy(rew_batch).to(device)
                 next_obs_batch = torch.from_numpy(next_obs_batch).float().to(device) / 255.0
                 not_done_mask = torch.from_numpy(1 - done_mask).float().to(device)
