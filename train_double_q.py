@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from torch import nn
-from tqdm import tqdm_notebook as tqdm
+from tqdm import tqdm
 import itertools
 from utils.helpers import device, copy_model_params, process_state
 from policy import make_epsilon_greedy_policy
@@ -10,8 +10,8 @@ from replay import ReplayBuffer
 import gym
 from gym.wrappers import Monitor
 
-from IPython import display
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 # we should learn this ourselves.
 VALID_ACTIONS = [0, 1, 2, 3]
@@ -62,7 +62,7 @@ def train(env, estimator, target_network, num_episodes=1000,
     pbar.set_description("ep: %d, er: %.2f, et: %d, tt: %d, exp_size: %d" % (0, 0.0, 0, 0, 0))
 
     recent_rewards = []
-    last_ep_reward = (0, 0)
+    mean_rewards = []
 
     for ep in pbar:
 
@@ -107,7 +107,8 @@ def train(env, estimator, target_network, num_episodes=1000,
 
                 _, best_actions = torch.max(estimator(next_obs_batch), 1)
 
-                next_state_values = not_done_mask * torch.gather(target_network(next_obs_batch), 1, best_actions.unsqueeze(1))
+                next_state_values = not_done_mask * torch.gather(target_network(next_obs_batch),
+                                                                 1, best_actions.unsqueeze(1)).squeeze()
 
                 expected_q_value = (next_state_values * discount) + rew_batch
 
@@ -133,13 +134,16 @@ def train(env, estimator, target_network, num_episodes=1000,
             episode_t = t
 
         if ep % 100 == 0:
-            x = [last_ep_reward[0], ep]
-            y = [last_ep_reward[1], sum(recent_rewards)/100]
-            plt.plot(x, y, 'r')
-            display.clear_output(wait=True)
-            display.display(plt.gcf())
+            x = range(0, ep+100, 100)
+            mean_rewards.append(sum(recent_rewards)/100)
+            plt.plot(x, mean_rewards, 'r', figure=plt.figure())
+            ax = plt.gcf().axes[0]
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
+            plt.title("DDQN Atari Breakout")
+            plt.xlabel("iteration")
+            plt.ylabel("mean reward")
+            plt.savefig("mean_reward_vs_iteration.png")
             recent_rewards = []
-            last_ep_reward = (x[1], y[1])
         else:
             recent_rewards.append(episode_reward)
 

@@ -2,14 +2,15 @@ import os
 import torch
 import gym
 from utils.helpers import copy_model_params, device
-from train import train, VALID_ACTIONS
+# from train import train, VALID_ACTIONS
+from train_double_q import train, VALID_ACTIONS
 from estimator import Estimator
 
 num_episodes = 1000
 frame_history_len = 4
 
-# env = gym.envs.make("Breakout-v0")
-env = gym.envs.make("BreakoutDeterministic-v4")
+env = gym.envs.make("Breakout-v0")
+# env = gym.envs.make("BreakoutDeterministic-v4")
 if len(env.observation_space.shape) == 1:
     # This means we are running on low-dimensional observations (e.g. RAM)
     input_arg = env.observation_space.shape[0]
@@ -28,7 +29,6 @@ if os.path.isfile(model_path):
     weights = torch.load(model_path)
     estimator.load_state_dict(weights)
     copy_model_params(estimator, target_network)
-
 
 
 train(env, estimator, target_network, num_episodes=num_episodes, frame_history_len=frame_history_len)
